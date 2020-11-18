@@ -60,3 +60,9 @@ class DireksiPekerjaanConst{
     const MLEP = 4;
     const MADM = 5;
 }
+
+class JenisDokumenConst{
+    const TOR = 1;
+    const DMR = 2;
+    const PR  = 3;
+}

@@ -40,4 +40,9 @@ class Pengadaan extends Model
     {
         return $this->belongsTo('App\Models\User',"created_by_user_id");
     }
+
+    public function dokumen()
+    {
+        return $this->hasMany("\App\Models\Dokumen");
+    }
 }

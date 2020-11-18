@@ -86,7 +86,12 @@ class UserController extends Controller
 
         }
         $user_role = $user->role;
-        return $user;
+        return response()->json([
+            "name" => $user->name,
+            "email" => $user->email,
+            "jabatan" => $user->jabatan->jabatan_name,
+            "role" => $user->role->role_name
+        ]);
     }
 
 
