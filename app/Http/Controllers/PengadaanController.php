@@ -71,19 +71,21 @@ class PengadaanController extends Controller
             break;
         }
 
-        if($request->term){
+        if($request->term && $request->term != "" ){
             $term = $request->term;
             $data = $data->where("judul_pengadaan","like","%".$term."%");
         }
 
         foreach($this->filterableAttr as $filter){
-            if($request->get($filter)){
+            if($request->get($filter) && count($request->get($filter)) != 0){
                 $status_pengadaans = $request->get($filter);
-                $data = $data->whereIn($filter,$status_pengadaans);
+                if(!in_array(null,$status_pengadaans)){
+                    $data = $data->whereIn($filter,$status_pengadaans);
+                }
             }
         }
         
 
-        return ResourcesPengadaan::collection($data->paginate());
+        return ResourcesPengadaan::collection($data->get());
     }
 }

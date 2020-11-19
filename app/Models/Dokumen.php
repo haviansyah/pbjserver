@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class Dokumen extends Model
 {
     use HasFactory;
+
+    protected $guarded = [];
     
     function jenisDokumen(){
-        return $this->belongsTo("\App\Model\JenisDokumen");
+        return $this->belongsTo("\App\Models\JenisDokumen");
     }
 
     function statusDokumen(){
@@ -28,7 +30,17 @@ class Dokumen extends Model
 
     public function posisi()
     {
-        return $this->belongsTo('App\Models\User',"posisi_by_user_id");
+        return $this->belongsTo('App\Models\User',"posisi_user_id");
+    }
+
+    public function dokumenDmr()
+    {
+        return $this->hasOne("App\Models\DokumenDmr");
+    }
+
+    public function dokumenPr()
+    {
+        return $this->hasOne("App\Models\DokumenPr");
     }
 
 }

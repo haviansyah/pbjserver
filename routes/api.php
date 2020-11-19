@@ -1,4 +1,6 @@
 <?php
+
+use App\Http\Controllers\DokumenController;
 use App\Http\Controllers\PengadaanController;
 use App\Http\Controllers\UserController;
 use App\Models\User;
@@ -43,14 +45,21 @@ Route::middleware(['jwt.verify:'.RoleConst::ADMIN])->group(function () {
     //Pengadaan Api Endpoint
     Route::put('pengadaans/{id}',[PengadaanController::class,"update"]);
     Route::delete('pengadaans/{id}',[PengadaanController::class,"delete"]);
+
 });
 
 Route::middleware(['jwt.verify:'.RoleConst::RENDAL])->group(function () {
     Route::post('pengadaans',[PengadaanController::class,'store']);
+
+    Route::post('dokumens',[DokumenController::class,'store']);
+
+    
 });
 
 Route::middleware(['jwt.verify:'.multiroles([RoleConst::ADMIN,RoleConst::RENDAL,RoleConst::MANAGERBIDANG])])->group(function () {
     Route::get('pengadaans',[PengadaanController::class,'index']);
+
+    Route::get('dokumens',[DokumenController::class,'get']);
 });
 
 Route::get("test", function(Request $request){
