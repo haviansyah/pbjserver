@@ -13,6 +13,22 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+// Route::get('/', function () {
+//     return view('welcome');
+// });
+
+Auth::routes();
+
+Route::middleware('auth')->group(function(){
+    Route::get('/', [App\Http\Controllers\UserController::class, 'showUser'])->name('home');
+    Route::post('admin/users', [App\Http\Controllers\UserController::class, 'register'])->name('store.user');
+    Route::get('admin/users/delete/{id}', [App\Http\Controllers\UserController::class, 'deleteUser'])->name('delete.user');
+
 });
+
+Route::get("/test",function(Request $request){
+    $dat = "11";
+    $arr = explode("-",$dat);
+    var_dump($arr);
+});
+

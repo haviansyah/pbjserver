@@ -20,11 +20,11 @@ class RoleConstId{
     const MANAGERBIDANG = 3;
     const GM = 4;
     const KEUANGAN = 5;
-    const LIM = 6;
-    const MENG = 7;
-    const AMUINVENTORY = 8;
-    const MADM = 9;
-    const PBJ = 10;
+    const LIM = 7;
+    const MENG = 8;
+    const AMUINVENTORY = 9;
+    const MADM = 10;
+    const PBJ = 11;
 }
 
 class StatusPengadaanConst{
@@ -65,4 +65,26 @@ class JenisDokumenConst{
     const TOR = 1;
     const DMR = 2;
     const PR  = 3;
+}
+
+class StatusDokumenConst{
+    const BARU = 1;
+    const MASUK = 2;
+    const REVIEW = 3;
+    const KEU = 4;
+    const PBJ = 5;
+    const REVISE = 6;
+    const APPROVE = 7;
+}
+
+class StateDocumentConst{
+    const PRA = 1;
+    CONST KEU = 2;
+    CONST PBJ = 3;
+}
+
+
+class TypeNotificationConst{
+    const DOKUMEN = 1;
+    const PENGADAAN = 2;
 }

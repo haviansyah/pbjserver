@@ -7,8 +7,11 @@ use App\Models\StatusPengadaan;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator as FacadesValidator;
+use JenisDokumenConst;
 use JWTAuth;
+use MetodePengadaanConst;
 use RoleConst;
+use StatusDokumenConst;
 use StatusPengadaanConst;
 
 class PengadaanController extends Controller
@@ -59,7 +62,9 @@ class PengadaanController extends Controller
         $auth_role = $user->RoleName;
 
         switch($auth_role){
-            case RoleConst::ADMIN :
+            case RoleConst::ADMIN:
+            case RoleConst::PBJ:
+            case RoleConst::KEUANGAN:
                 $data = Pengadaan::whereNotNull('id');
             break;
             case RoleConst::RENDAL:
@@ -67,8 +72,14 @@ class PengadaanController extends Controller
             break;
             case RoleConst::MANAGERBIDANG:
                 $bidang_id = $user->Bidang->id;
-                $data = Pengadaan::where("direksi_pengadaan_id",$bidang_id);
+                $data = Pengadaan::whereHas("dokumen",function($query) use($user){
+                    return $query->where("posisi_user_id",$user->id);
+                })->orWhere("direksi_pengadaan_id",$bidang_id);
             break;
+            default:
+                $data = Pengadaan::whereHas("dokumen",function($query) use($user){
+                    return $query->where("posisi_user_id",$user->id);
+                });
         }
 
         if($request->term && $request->term != "" ){
@@ -87,5 +98,79 @@ class PengadaanController extends Controller
         
 
         return ResourcesPengadaan::collection($data->get());
+    }
+
+    public function setPengadaan($id,$metode){
+        $pengadaan = Pengadaan::findOrFail($id);
+        $pengadaan->metode_pengadaan_id = (int)$metode;
+        $pengadaan->status_pengadaan_id = StatusPengadaanConst::DPHPS;
+        $pengadaan->save();
+    }
+
+    public function lanjutPengadaan($id){
+        $pengadaan = Pengadaan::findOrFail($id);
+        $statusPengadaan = $pengadaan->status_pengadaan_id;
+        $metodePengadaan = $pengadaan->metode_pengadaan_id;
+
+        if($statusPengadaan == StatusPengadaanConst::DPHPS){
+            if($metodePengadaan == MetodePengadaanConst::PENGADAAN_LANGSUNG){
+                $next_status = StatusPengadaanConst::PPH;
+            }else{
+                $next_status = StatusPengadaanConst::AANWIZJING;
+            }
+        }
+
+        if($statusPengadaan == StatusPengadaanConst::AANWIZJING){
+            $next_status = StatusPengadaanConst::SKP;
+        }
+
+        if($statusPengadaan == StatusPengadaanConst::PPH || $statusPengadaan == StatusPengadaanConst::SKP){
+            $next_status = StatusPengadaanConst::KONTRAK; 
+        }
+
+        $pengadaan->status_pengadaan_id = $next_status;
+        $pengadaan->save();        
+    }
+
+    public function kontrak($id,Request $request){
+        $pengadaan = Pengadaan::findOrFail($id);
+        $nomor_kontrak = $request->no;
+
+        $pengadaan->nomor_kontrak = $nomor_kontrak;
+        $pengadaan->status_pengadaan_id = StatusPengadaanConst::KONTRAK;
+        $pengadaan->save();
+    }
+
+
+    public function lanjutPBJ($id){
+
+        try{
+            $pengadaan = Pengadaan::findOrFail($id);
+
+            $tor = $pengadaan->dokumen->where("jenis_dokumen_id", JenisDokumenConst::TOR)->first();
+            $dmr = $pengadaan->dokumen->where("jenis_dokumen_id", JenisDokumenConst::DMR)->first();
+            $pr = $pengadaan->dokumen->where("jenis_dokumen_id", JenisDokumenConst::PR)->first();
+
+            $alldoc = [$tor, $dmr, $pr];
+
+            $pengadaan->state_pengadaan = 2;
+            $pengadaan->save();
+
+            foreach ($alldoc as $doc) {
+                $step_dokumen = $doc->step;
+
+                $step_next = $step_dokumen + 1;
+                $doc->last_step = $doc->step;
+                $doc->step = $step_next;
+                $doc->posisi_user_id = 22;
+                $doc->state_document = 3;
+                $doc->status_dokumen_id = StatusDokumenConst::MASUK;
+                $doc->save();
+            }
+        }catch(Exception $e){
+            return response()->json(["error"=>$e],400);
+
+        }
+        return response()->json(["status"=>"ok"],200);
     }
 }

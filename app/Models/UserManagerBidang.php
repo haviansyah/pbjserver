@@ -9,6 +9,7 @@ class UserManagerBidang extends Model
 {
     use HasFactory;
 
+    protected $guarded = [];
     public function bidang(){
         return $this->belongsTo('App\Models\DireksiPengadaan','bidang_id');
     }

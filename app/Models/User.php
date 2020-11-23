@@ -77,4 +77,13 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->belongsTo('App\Models\Jabatan');
     }
+
+
+    public function fcmToken(){
+        return $this->hasMany('App\Models\FcmToken');
+    }
+
+    public function notification(){
+        return $this->hasMany('App\Models\Notification');
+    }
 }
