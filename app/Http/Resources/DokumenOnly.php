@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Resources;
 
+use App\Helpers\PbjHelper;
 use Illuminate\Http\Resources\Json\JsonResource;
 use JWTAuth;
 use RoleConstId;
@@ -18,32 +19,13 @@ class DokumenOnly extends JsonResource
     {
         $user = JWTAuth::parseToken()->authenticate();
 
-        $keterangan_status_dokumen = "";
+        $keterangan_status_dokumen = $keterangan_status_dokumen = PbjHelper::buildKeteranganDokumen($this);
         $posisi_role_id = $this->posisi->role->id;
         $posisi_jabatan = $this->posisi->jabatan->jabatan_name;
 
-        if($posisi_role_id == RoleConstId::MANAGERBIDANG){
+        if ($posisi_role_id == RoleConstId::MANAGERBIDANG) {
             $bidang = $this->posisi->managerBidang->bidang->direksi_pengadaan;
-            $posisi_jabatan = $this->posisi->jabatan->jabatan_name." ".$bidang;
-        }
-
-        $status = $this->statusDokumen;
-        switch ($status->id) {
-            case 1:
-                $keterangan_status_dokumen = "Dokumen Baru";
-                break;
-            case 2:
-                $keterangan_status_dokumen = "Diserahkan ke " . $posisi_jabatan;
-                break;
-            case 3:
-                $keterangan_status_dokumen = "Direview oleh " . $posisi_jabatan;
-                if($posisi_role_id == RoleConstId::RENDAL){
-                    $keterangan_status_dokumen = "Direvisi oleh " . $posisi_jabatan;
-                }
-                break;
-            case StatusDokumenConst::APPROVE:
-                $keterangan_status_dokumen = "Approved PBJ";
-            break;
+            $posisi_jabatan = $this->posisi->jabatan->jabatan_name . " " . $bidang;
         }
 
         return [

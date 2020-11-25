@@ -9,7 +9,9 @@ use App\Models\Dokumen;
 use App\Models\DokumenDmr;
 use App\Models\DokumenPr;
 use App\Models\Notification;
+use App\Models\Step;
 use App\Models\User;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use JenisDokumenConst;
@@ -23,49 +25,28 @@ use TypeNotificationConst;
 class DokumenController extends Controller
 {
 
-    private $step = [
-        /* Step Buat TOR */
-        JenisDokumenConst::TOR =>
-        [
-            [RoleConstId::RENDAL, ["submit"]],
-            [RoleConstId::SEKERTARISGM, ["teruskan"]],
-            [RoleConstId::MANAGERBIDANG, ["approve","revise"]],
-            [RoleConstId::SEKERTARISGM, ["approve","revise"]],
-
-            [RoleConstId::KEUANGAN, ["approve","revise"]],
-            [RoleConstId::MADM],
-            [RoleConstId::PBJ, ["approve","revise"]],
-
-        ],
-        JenisDokumenConst::DMR =>
-        [
-            [RoleConstId::RENDAL, ["submit"]],
-            [RoleConstId::SEKERTARISGM, ["teruskan"]],
-            [RoleConstId::MANAGERBIDANG, ["approve","revise"]],
-            [RoleConstId::LIM, ["approve","revise"]],
-            [RoleConstId::MENG, ["approve"]],
-            [RoleConstId::SEKERTARISGM, ["approve"]],
-            [RoleConstId::LIM, ["input?nomorDMR"]],
-
-            [RoleConstId::KEUANGAN, ["approve","revise"]],
-            [RoleConstId::MADM],
-            [RoleConstId::PBJ, ["approve","revise"]],
-        ],
-        JenisDokumenConst::PR =>
-        [
-            [RoleConstId::RENDAL, ["submit"]],
-            [RoleConstId::AMUINVENTORY, ["approve","revise"]],
-            [RoleConstId::MANAGERBIDANG, ["approve","revise"]],
-
-            [RoleConstId::KEUANGAN, ["approve","revise"]],
-            [RoleConstId::MADM],
-            [RoleConstId::PBJ, ["approve","revise"]],
-        ]
-    ];
+    private $step;
 
     private $filterableAttr = [
         "jenis_dokumen_id",
     ];
+
+    function __construct()
+    {
+        $step_db = Step::get()->groupBy("jenis_dokumen_id");
+        $step_arr = [];
+        foreach ($step_db as $jenis_dokumen_id => $step_list) {
+            $idx = (int) $jenis_dokumen_id;
+            $step_arr[$idx] = [];
+            foreach ($step_list as $step) {
+                $role = $step["role_id"];
+                $submit = $step["submit"];
+                $revise = $step["revise"];
+                $step_arr[$idx][] = [$role,[$submit,$revise]];
+            }
+        }
+        $this->step = $step_arr;
+    }
 
     public function store(Request $request)
     {
@@ -78,10 +59,10 @@ class DokumenController extends Controller
             'posisi_user_id' => $user->id,
         ]);
 
-        if($request->get("nomor_pr") != null){
+        if ($request->get("nomor_pr") != null) {
             $pengadaan->dokumenPr()->save(new DokumenPr(["nomor_pr" => $request->get("nomor_pr")]));
         }
-        
+
         return response()->json($request->all(), 201);
     }
 
@@ -114,15 +95,16 @@ class DokumenController extends Controller
                     $this->buildAction($id, "tidak")
                 ];
             } else {
-                if(array_key_exists(1,$this->step[$jenis_dokumen][$step_dokumen])){
+                if (array_key_exists(1, $this->step[$jenis_dokumen][$step_dokumen])) {
                     $actions_list = $this->step[$jenis_dokumen][$step_dokumen][1];
                     foreach ($actions_list as $act) {
+                        if($act!= null)
                         array_push($action, $this->buildAction($id, $act));
                     }
                 }
-               
             }
         }
+        // return $this->step;
         return response()->json([
             "data" => $data_array,
             "aksi" => $action
@@ -130,11 +112,21 @@ class DokumenController extends Controller
     }
 
 
-    public function buildNotifBody(int $type,$dari, Dokumen $data){
-        switch($type){
+    public function buildNotifBody(int $type, $dari, Dokumen $data)
+    {
+        switch ($type) {
             case 1:
-                return "Dokumen diteruskan dari {$dari} : {$data->jenisDokumen->jenis_dokumen_name} ".PbjHelper::buildJudul($data->pengadaan->judul_pengadaan);
-            break;
+                return "Dokumen diteruskan dari {$dari} : {$data->jenisDokumen->jenis_dokumen_name} " . PbjHelper::buildJudul($data->pengadaan->judul_pengadaan);
+                break;
+            case 2:
+                return "Dokumen telah direvisi dari {$dari} : {$data->jenisDokumen->jenis_dokumen_name} " . PbjHelper::buildJudul($data->pengadaan->judul_pengadaan);
+                break;
+            case 3:
+                return "Dokumen direvisi dari {$dari} : {$data->jenisDokumen->jenis_dokumen_name} " . PbjHelper::buildJudul($data->pengadaan->judul_pengadaan);
+                break;
+            case 4:
+                return "Dokumen dikembalikan dari {$dari} : {$data->jenisDokumen->jenis_dokumen_name} " . PbjHelper::buildJudul($data->pengadaan->judul_pengadaan);
+                break;
         }
     }
 
@@ -153,13 +145,13 @@ class DokumenController extends Controller
         $step_next = $step_dokumen + 1;
         if ($data->state_document == 1) {
             // Get Next STEP
-            
+
             // Ambil role id selanjutnya
             $role_next = $this->step[$jenis_dokumen][$step_next][0];
 
             // Cari User dengan role selanjutnya 
             $role_user = User::where("role_id", $role_next)->first();
-            
+
 
             // Cari User kalau manager bidang sesuai bidang 
             if ($role_next == RoleConstId::MANAGERBIDANG) {
@@ -168,10 +160,10 @@ class DokumenController extends Controller
                     return $query->where("bidang_id", (int) $bidang_dokumen);
                 })->first();
                 // dd($role_user);
-                $role_user_id =$role_user->id;
-            }else if ($role_next == RoleConstId::MENG) {
+                $role_user_id = $role_user->id;
+            } else if ($role_next == RoleConstId::MENG) {
                 $role_user_id = 18;
-            }else{
+            } else {
                 $role_user_id = $role_user->id;
             }
 
@@ -182,9 +174,9 @@ class DokumenController extends Controller
                 $data->step = $step_next;
                 $data->last_step =  $step_dokumen;
                 $data->status_dokumen_id = StatusDokumenConst::MASUK;
-               
 
-                $notifBody = $this->buildNotifBody(1, User::find($data->prev_user_id)->name,$data);
+
+                $notifBody = $this->buildNotifBody(1, User::find($data->prev_user_id)->name, $data);
                 $notif = new Notification([
                     "user_id" => $role_user_id,
                     "title" => "Dokumen Di Teruskan",
@@ -192,20 +184,20 @@ class DokumenController extends Controller
                     "data_id" => $data->id,
                     "data_type" => TypeNotificationConst::DOKUMEN
                 ]);
-                
+
                 $data->save();
                 $notif->save();
 
-
+                PbjHelper::buildDocumentActivity($data,1);
                 PbjHelper::sendNotification($notif);
             } catch (Exception $e) {
                 return $e;
             }
 
             return response()->json(["status" => "OK"], 200);
-        }else if ($data->state_document == 2){
+        } else if ($data->state_document == 2) {
 
-            if($posisi_dokumen_role == RoleConstId::RENDAL){
+            if ($posisi_dokumen_role == RoleConstId::RENDAL) {
                 try {
                     $keu_id =  User::where("role_id", RoleConstId::KEUANGAN)->first()->id;
                     $data->prev_user_id = $data->posisi_user_id;
@@ -213,11 +205,23 @@ class DokumenController extends Controller
                     $data->step = $data->last_step;
                     $data->last_step = 0;
                     $data->status_dokumen_id = StatusDokumenConst::MASUK;
+                    $notifBody = $this->buildNotifBody(2, User::find($data->prev_user_id)->name, $data);
+                    $notif = new Notification([
+                        "user_id" => $keu_id,
+                        "title" => "Dokumen telah di revisi",
+                        "body" => $notifBody,
+                        "data_id" => $data->id,
+                        "data_type" => TypeNotificationConst::DOKUMEN
+                    ]);
+
                     $data->save();
+                    $notif->save();
+                    PbjHelper::buildDocumentActivity($data,1);
+                    PbjHelper::sendNotification($notif);
                 } catch (Exception $e) {
                     return $e;
                 }
-            }else{
+            } else {
                 // IF APPROVED BY KEUANGAN
                 $madm_id =  20;
                 try {
@@ -226,16 +230,27 @@ class DokumenController extends Controller
                     $data->step = $step_next;
                     $data->last_step =  $step_dokumen;
                     $data->status_dokumen_id = StatusDokumenConst::MASUK;
+
+                    $notifBody = $this->buildNotifBody(1, User::find($data->prev_user_id)->name, $data);
+                    $notif = new Notification([
+                        "user_id" => $madm_id,
+                        "title" => "Dokumen masuk",
+                        "body" => $notifBody,
+                        "data_id" => $data->id,
+                        "data_type" => TypeNotificationConst::DOKUMEN
+                    ]);
+
                     $data->save();
+                    $notif->save();
+                    PbjHelper::buildDocumentActivity($data,1);
+                    PbjHelper::sendNotification($notif);
                 } catch (Exception $e) {
                     return $e;
                 }
             }
-            
-        }
-        else if ($data->state_document == 3){
+        } else if ($data->state_document == 3) {
 
-            if($posisi_dokumen_role == RoleConstId::RENDAL){
+            if ($posisi_dokumen_role == RoleConstId::RENDAL) {
                 try {
                     // Move TO PBJ
                     $pbj_id =  User::where("role_id", RoleConstId::PBJ)->first()->id;
@@ -244,20 +259,32 @@ class DokumenController extends Controller
                     $data->step = $data->last_step;
                     $data->last_step = 0;
                     $data->status_dokumen_id = StatusDokumenConst::MASUK;
+                    $notifBody = $this->buildNotifBody(2, User::find($data->prev_user_id)->name, $data);
+                    $notif = new Notification([
+                        "user_id" => $pbj_id,
+                        "title" => "Dokumen telah di revisi",
+                        "body" => $notifBody,
+                        "data_id" => $data->id,
+                        "data_type" => TypeNotificationConst::DOKUMEN
+                    ]);
+
                     $data->save();
+                    $notif->save();
+                    PbjHelper::buildDocumentActivity($data,1);
+                    PbjHelper::sendNotification($notif);
                 } catch (Exception $e) {
                     return $e;
                 }
-            }else{
+            } else {
                 // IF APPROVED BY PBJ
                 try {
                     $data->status_dokumen_id = StatusDokumenConst::APPROVE;
                     $data->save();
+                    PbjHelper::buildDocumentActivity($data,1);
                 } catch (Exception $e) {
                     return $e;
                 }
             }
-            
         }
     }
 
@@ -269,12 +296,16 @@ class DokumenController extends Controller
             $data->prev_user_id = $data->posisi_user_id;
             $data->status_dokumen_id = StatusDokumenConst::REVIEW;
 
-            if($data->posisi->role_id == RoleConstId::KEUANGAN){
+            if ($data->posisi->role_id == RoleConstId::KEUANGAN) {
                 $data->state_document = StateDocumentConst::KEU;
-            }if($data->posisi->role_id == RoleConstId::PBJ){
+            }
+            if ($data->posisi->role_id == RoleConstId::PBJ) {
                 $data->state_document = StateDocumentConst::PBJ;
             }
+
+            $data->confirmed_at = new Carbon();
             $data->save();
+            PbjHelper::buildDocumentActivity($data,3);
         } catch (Exception $e) {
             return response()->json($e, 400);
         }
@@ -290,7 +321,20 @@ class DokumenController extends Controller
             $data->last_step = $data->step;
             $data->step = 0;
             $data->status_dokumen_id = StatusDokumenConst::MASUK;
+
+            $notifBody = $this->buildNotifBody(3, User::find($data->prev_user_id)->name, $data);
+            $notif = new Notification([
+                "user_id" => $data->created_by_user_id,
+                "title" => "Dokumen direvisi",
+                "body" => $notifBody,
+                "data_id" => $data->id,
+                "data_type" => TypeNotificationConst::DOKUMEN
+            ]);
+
             $data->save();
+            $notif->save();
+            PbjHelper::buildDocumentActivity($data,2);
+            PbjHelper::sendNotification($notif);
         } catch (Exception $e) {
             return response()->json($e, 400);
         }
@@ -302,12 +346,26 @@ class DokumenController extends Controller
     {
         $data = Dokumen::findOrFail($id);
         try {
+            $user_id = $data->posisi_user_id;
             $ls = $data->last_step;
             $data->posisi_user_id = $data->prev_user_id;
             $data->last_step = $data->step;
             $data->step = $ls;
             $data->status_dokumen_id = StatusDokumenConst::REVIEW;
+
+            $notifBody = $this->buildNotifBody(4, User::find($user_id)->name, $data);
+            $notif = new Notification([
+                "user_id" => $data->posisi_user_id,
+                "title" => "Dokumen dikembalikan",
+                "body" => $notifBody,
+                "data_id" => $data->id,
+                "data_type" => TypeNotificationConst::DOKUMEN
+            ]);
+
             $data->save();
+            $notif->save();
+            PbjHelper::buildDocumentActivity($data,4);
+            PbjHelper::sendNotification($notif);
         } catch (Exception $e) {
             return response()->json($e, 400);
         }
@@ -315,15 +373,16 @@ class DokumenController extends Controller
         return response()->json(["status" => "OK"], 200);
     }
 
-    public function input($id,Request $request){
+    public function input($id, Request $request)
+    {
         $data = Dokumen::findOrFail($id);
         // var_dump($request->all());
-        if($request->get("nomorDMR") != null){
+        if ($request->get("nomorDMR") != null) {
             $data->dokumenDmr()->save(new DokumenDmr(["nomor_dmr" => $request->get("nomorDMR")]));
             $this->dokumenSubmit($id);
         }
 
-        echo response()->json(["status"=>"OK",200]);
+        echo response()->json(["status" => "OK", 200]);
     }
 
     public function get(Request $request)
@@ -331,24 +390,23 @@ class DokumenController extends Controller
         $user = JWTAuth::parseToken()->authenticate();
         $auth_role = $user->role->role_name;
 
-        switch($auth_role){
+        switch ($auth_role) {
             case RoleConst::PBJ:
                 $data = Dokumen::where(function ($query) use ($user) {
-                    return $query->where("posisi_user_id", $user->id)->orWhere("created_by_user_id", $user->id)->orWhere("state_document",3);
+                    return $query->where("posisi_user_id", $user->id)->orWhere("created_by_user_id", $user->id)->orWhere("state_document", 3);
                 });
-            break;
+                break;
             case RoleConst::KEUANGAN:
                 $data = Dokumen::where(function ($query) use ($user) {
-                    return $query->where("posisi_user_id", $user->id)->orWhere("created_by_user_id", $user->id)->orWhere("state_document",2);
+                    return $query->where("posisi_user_id", $user->id)->orWhere("created_by_user_id", $user->id)->orWhere("state_document", 2);
                 });
-            break;
+                break;
             default:
                 $data = Dokumen::where(function ($query) use ($user) {
                     return $query->where("posisi_user_id", $user->id)->orWhere("created_by_user_id", $user->id);
                 });
-
         }
-        
+
         if ($request->term && $request->term != "") {
             $term = $request->term;
             $data =  $data->whereHas("pengadaan", function ($query) use ($term) {
@@ -365,7 +423,7 @@ class DokumenController extends Controller
                 }
             }
         }
-        $data = $data->where("status_dokumen_id","!=",StatusDokumenConst::APPROVE);
+        $data = $data->where("status_dokumen_id", "!=", StatusDokumenConst::APPROVE);
         return ResourcesDokumen::collection($data->get());
         // return response()->json($dokumens,200);
     }

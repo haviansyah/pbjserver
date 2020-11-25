@@ -2,7 +2,10 @@
 
 namespace App\Http\Resources;
 
+use App\Helpers\PbjHelper;
 use App\Models\StatusDokumen;
+use App\Models\Step;
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 use JenisDokumenConst;
 use JWTAuth;
@@ -21,49 +24,38 @@ class Dokumen extends JsonResource
     {
         $user = JWTAuth::parseToken()->authenticate();
 
-        $keterangan_status_dokumen = "";
+        $keterangan_status_dokumen = PbjHelper::buildKeteranganDokumen($this);
         $posisi_role_id = $this->posisi->role->id;
         $posisi_jabatan = $this->posisi->jabatan->jabatan_name;
+        
+        
 
-       
-
-        if($posisi_role_id == RoleConstId::MANAGERBIDANG){
+        if ($posisi_role_id == RoleConstId::MANAGERBIDANG) {
             $bidang = $this->posisi->managerBidang->bidang->direksi_pengadaan;
-            $posisi_jabatan = $this->posisi->jabatan->jabatan_name." ".$bidang;
+            $posisi_jabatan = $this->posisi->jabatan->jabatan_name . " " . $bidang;
         }
-
-        $status = $this->statusDokumen;
-        switch ($status->id) {
-            case 1:
-                $keterangan_status_dokumen = "Dokumen Baru";
-                break;
-            case 2:
-                $keterangan_status_dokumen = "Diserahkan ke " . $posisi_jabatan;
-                break;
-            case 3:
-                $keterangan_status_dokumen = "Direview oleh " . $posisi_jabatan;
-                if($posisi_role_id == RoleConstId::RENDAL){
-                    $keterangan_status_dokumen = "Direvisi oleh " . $posisi_jabatan;
-                }
-                break;
-            case StatusDokumenConst::APPROVE:
-                $keterangan_status_dokumen = "Approved PBJ";
-            break;
-        }
-
+        
         $nomor_dmr = null;
         $nomor_pr = null;
-        if($this->jenisDokumen->id == JenisDokumenConst::DMR){
-            if($this->dokumenDmr){
+        if ($this->jenisDokumen->id == JenisDokumenConst::DMR) {
+            if ($this->dokumenDmr) {
                 $nomor_dmr = $this->dokumenDmr->nomor_dmr;
             }
         }
 
-        if($this->jenisDokumen->id == JenisDokumenConst::PR){
-            if($this->dokumenPr){
+        if ($this->jenisDokumen->id == JenisDokumenConst::PR) {
+            if ($this->dokumenPr) {
                 $nomor_pr = $this->dokumenPr->nomor_pr;
             }
         }
+
+
+        $sla =  $this->StepModel->sla;
+        $confirmed_at = $this->confirmed_at?? $this->created_at;
+        $elapsed_time = $confirmed_at->diffInHours(new Carbon()); 
+        $time_remaining = $sla - $elapsed_time;
+        $days_remaining = floor($time_remaining / 24);     
+
 
         return [
             'id' => $this->id,
@@ -75,8 +67,12 @@ class Dokumen extends JsonResource
             'status_dokumen_ket' => $keterangan_status_dokumen,
             "nomor_dmr" => $nomor_dmr,
             "nomor_pr" => $nomor_pr,
-            'self' => $this->when($user->id == $this->posisi->id, true, false)
+            'self' => $this->when($user->id == $this->posisi->id, true, false),
+            'confirmed_at' => $confirmed_at->format('d M Y h:i:s A'),
+            'sla' => $sla,
+            'elapsed_time' => $elapsed_time,
+            'time_remaining' => $time_remaining,
+            'days_remaining' => ($time_remaining < 1 ? "-" : "" ).PbjHelper::convertToDaysHours($time_remaining)
         ];
     }
 }
-

@@ -4,8 +4,10 @@ use App\Http\Controllers\DokumenController;
 use App\Http\Controllers\NotifController;
 use App\Http\Controllers\PengadaanController;
 use App\Http\Controllers\UserController;
+use App\Models\Dokumen;
 use App\Models\FcmToken;
 use App\Models\Notification;
+use App\Models\Step;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Notifiable;
@@ -116,3 +118,8 @@ Route::get("test", function(Request $request){
 
 });
 
+
+Route::get("havi",function(Request $request){
+   $dokumen = Dokumen::all()->first();
+    dd($dokumen->stepModel);
+});
