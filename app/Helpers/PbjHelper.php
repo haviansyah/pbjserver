@@ -24,7 +24,7 @@ class PbjHelper
         fcm()
             ->to($token_list) // $recipients must an array
             ->priority('normal')
-            ->timeToLive(0)
+            ->timeToLive(86400)
             ->data([
                 'data' => $notification->data->toArray(),
             ])
@@ -117,7 +117,7 @@ class PbjHelper
         $time = abs($time);
         $days = floor($time / 24);
         $hours = ($time % 24);
-        $format = "%d Hari" . ($hours != 0 ? " %d Jam" : "");
+        $format = "%d Hari" . ($days == 0 ? " %d Jam" : "");
         return sprintf($format, $days, $hours);
     }
 }

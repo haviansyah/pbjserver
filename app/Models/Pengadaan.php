@@ -11,6 +11,10 @@ class Pengadaan extends Model
 
     protected $guarded = [];
 
+    protected $dates = [
+        "created_at", "updated_at", "tanggal_selesai_kontrak","confirmed_at"
+    ];
+
     public function jenisAnggaran()
     {
         return $this->belongsTo('App\Models\JenisAnggaran');

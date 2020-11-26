@@ -2,7 +2,10 @@
 
 namespace App\Http\Resources;
 
+use App\Helpers\PbjHelper;
 use App\Models\StatusPengadaan;
+use App\Models\Step;
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 use JenisDokumenConst;
 use StatusDokumenConst;
@@ -115,9 +118,22 @@ class Pengadaan extends JsonResource
             // PBJ =========================================================================
         }
         $metode_pengadaan = null;
+        $days_remaining = null;
+        $time_remaining = 0;
+        $sla = null;
         if ($this->metodePengadaan != null) {
             $metode_pengadaan = $this->metodePengadaan->metode_pengadaan;
+
+            $sla =  Step::where(function($q) use($metode_pengadaan){
+                return $q->where("jenis_dokumen_id",4)->where("step",$this->metodePengadaan->id);
+            })->get()->first()->sla;
+            $confirmed_at = $this->confirmed_at?? $this->created_at;
+            $elapsed_time = $confirmed_at->diffInHours(new Carbon()); 
+            $time_remaining = $sla - $elapsed_time;
+            $days_remaining = ($time_remaining < 1 ? "-" : "" ).PbjHelper::convertToDaysHours($time_remaining) ; 
         }
+        
+          
 
         return [
             'id' => $this->id,
@@ -134,7 +150,11 @@ class Pengadaan extends JsonResource
             ],
             "metode_pengadaan" => $metode_pengadaan,
             "nomor_kontrak" => $this->nomor_kontrak,
-            "aksi" => $action
+            "tanggal_selesai_kontrak" => $this->tanggal_selesai_kontrak ? $this->tanggal_selesai_kontrak->format("d M Y") : "-",
+            "aksi" => $action,
+            "sla" => $sla,
+            "time_remaining" => $time_remaining,
+            "days_remaining" => $days_remaining
         ];
     }
 }

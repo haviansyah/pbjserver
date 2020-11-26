@@ -94,3 +94,10 @@ class TypeNotificationConst{
     const DOKUMEN = 1;
     const PENGADAAN = 2;
 }
+
+
+class IdSLAConst{
+    const PENGADAAN_LANGSUNG = 25;
+    const PENUNJUKAN_LANSUNG = 26;
+    const LELANG = 27;
+}

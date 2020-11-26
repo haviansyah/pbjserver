@@ -1,9 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use App\Helpers\PbjHelper;
 use App\Http\Resources\Pengadaan as ResourcesPengadaan;
+use App\Models\Notification;
 use App\Models\Pengadaan;
 use App\Models\StatusPengadaan;
+use DateTime;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator as FacadesValidator;
@@ -14,6 +18,7 @@ use RoleConst;
 use StateDocumentConst;
 use StatusDokumenConst;
 use StatusPengadaanConst;
+use TypeNotificationConst;
 use UserIdConst;
 
 class PengadaanController extends Controller
@@ -105,6 +110,7 @@ class PengadaanController extends Controller
     public function setPengadaan($id,$metode){
         $pengadaan = Pengadaan::findOrFail($id);
         $pengadaan->metode_pengadaan_id = (int)$metode;
+        $pengadaan->confirmed_at = new DateTime();
         $pengadaan->status_pengadaan_id = StatusPengadaanConst::DPHPS;
         $pengadaan->save();
     }
@@ -127,7 +133,7 @@ class PengadaanController extends Controller
         }
 
         if($statusPengadaan == StatusPengadaanConst::PPH){
-            if($metodePengadaan == MetodePengadaanConst::PENGADAAN_LANGSUNG){
+            if($metodePengadaan != MetodePengadaanConst::PENGADAAN_LANGSUNG){
                 $next_status = StatusPengadaanConst::SKP;
             }else{
                 $next_status = StatusPengadaanConst::KONTRAK; 
@@ -145,8 +151,13 @@ class PengadaanController extends Controller
     public function kontrak($id,Request $request){
         $pengadaan = Pengadaan::findOrFail($id);
         $nomor_kontrak = $request->no;
+        $tanggal_kontrak = $request->tgl;
+
+        $dateFromString =date_create_from_format("d/m/Y",$tanggal_kontrak);
+        $dateToSQL = date_format($dateFromString,"Y-m-d");
 
         $pengadaan->nomor_kontrak = $nomor_kontrak;
+        $pengadaan->tanggal_selesai_kontrak = $dateToSQL;
         $pengadaan->status_pengadaan_id = StatusPengadaanConst::KONTRAK;
         $pengadaan->save();
     }
@@ -177,6 +188,19 @@ class PengadaanController extends Controller
                 $doc->status_dokumen_id = StatusDokumenConst::MASUK;
                 $doc->save();
             }
+
+            $notifBody = "Dokumen Masuk Dari MADM : ".PbjHelper::buildJudul($pengadaan->judul_pengadaan);
+            $notif = new Notification([
+                "user_id" => UserIdConst::PBJ,
+                "title" => "Dokumen masuk dari MADM",
+                "body" => $notifBody,
+                "data_id" => $pengadaan->id,
+                "data_type" => TypeNotificationConst::PENGADAAN
+            ]);
+            $notif->save();
+            PbjHelper::buildDocumentActivity($doc, 1);
+            
+            PbjHelper::sendNotification($notif);
         }catch(Exception $e){
             return response()->json(["error"=>$e],400);
 
@@ -209,7 +233,20 @@ class PengadaanController extends Controller
                 $doc->state_document = StateDocumentConst::KEU;
                 $doc->status_dokumen_id = StatusDokumenConst::MASUK;
                 $doc->save();
+                PbjHelper::buildDocumentActivity($doc, 1);
             }
+            $notifBody = "Dokumen Masuk Dari Keuangan : ".PbjHelper::buildJudul($pengadaan->judul_pengadaan);
+            $notif = new Notification([
+                "user_id" => UserIdConst::MADM,
+                "title" => "Dokumen masuk dari Keuangan",
+                "body" => $notifBody,
+                "data_id" => $pengadaan->id,
+                "data_type" => TypeNotificationConst::PENGADAAN
+            ]);
+            $notif->save();
+            
+            PbjHelper::sendNotification($notif);
+
         }catch(Exception $e){
             return response()->json(["error"=>$e],400);
 
@@ -231,6 +268,7 @@ class PengadaanController extends Controller
             foreach ($alldoc as $doc) {
                 $doc->status_dokumen_id = StatusDokumenConst::REVIEW;
                 $doc->save();
+                PbjHelper::buildDocumentActivity($doc,3);
             }
         }catch(Exception $e){
             return response()->json(["error"=>$e],400);
