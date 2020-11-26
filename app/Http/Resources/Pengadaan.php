@@ -7,9 +7,11 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use JenisDokumenConst;
 use StatusDokumenConst;
 use JWTAuth;
+use MetodePengadaanConst;
 use RoleConst;
 use RoleConstId;
 use StatusPengadaanConst;
+use UserIdConst;
 
 class Pengadaan extends JsonResource
 {
@@ -32,26 +34,45 @@ class Pengadaan extends JsonResource
         $action = null;
 
         $lengkap  = false;
+
         // Check Apakah Sudah Lengkap
         if (!in_array(null, $alldoc)) {
             // Get All Status;
 
-            // MADM
+            // KEUANGAN =========================================================================
+            $status_keu  = true;
+            foreach ($alldoc as $doc) {
+                $status =  $doc->status_dokumen_id;
+                $posisi =  $doc->posisi_user_id;
+                if ($posisi != UserIdConst::KEUANGAN || $status != StatusDokumenConst::KEU) {
+                    $status_keu = false;
+                }
+            }
+            if ($status_keu & ($user->id == UserIdConst::KEUANGAN)) {
+                $action = url("api/pengadaans/{$this->id}/lanjut-madm");
+            }
+            // KEUANGAN =========================================================================
+
+            // MADM =========================================================================
             $status_madm  = true;
             foreach ($alldoc as $doc) {
                 $status =  $doc->status_dokumen_id;
                 $posisi =  $doc->posisi_user_id;
-                if ($posisi != 20 || $status != StatusDokumenConst::REVIEW) {
+                if ($status != StatusDokumenConst::REVIEW) {
                     $status_madm = false;
                 }
             }
-            // $action = $user->role;
-            if($status_madm & ($user->id == 20)){
-                $action = url("api/pengadaans/{$this->id}/lanjut-pbj");
+            
+            if ($user->id == UserIdConst::MADM && $this->state_pengadaan == 3) {
+                $action = url("api/pengadaans/{$this->id}/konfirmasi-madm");
+
+                if($status_madm){
+                    $action = url("api/pengadaans/{$this->id}/lanjut-pbj");
+                }
             }
+            // MADM =========================================================================
 
-
-            // PBJ
+            // PBJ =========================================================================
             $status_pbj  = true;
             foreach ($alldoc as $doc) {
                 $status =  $doc->status_dokumen_id;
@@ -61,27 +82,40 @@ class Pengadaan extends JsonResource
                 }
             }
 
-            if($status_pbj & ($user->id == 22)){
+            if ($status_pbj & ($user->id == 22)) {
                 $action = url("api/pengadaans/{$this->id}/metode");
             }
-            
-            if($this->status_pengadaan_id != StatusPengadaanConst::PRAPENGADAAN && ($user->id == 22)){
+
+            if ($this->status_pengadaan_id != StatusPengadaanConst::PRAPENGADAAN && ($user->id == UserIdConst::PBJ)) {
                 $action = url("api/pengadaans/{$this->id}/lanjut");
             }
 
+            // KALAU PPH KALAU LELANG SKP DULU KALAU ENGGA LANJUT
 
+            if ($this->status_pengadaan_id == StatusPengadaanConst::PPH && ($user->id == UserIdConst::PBJ)) {
+                
+                if($this->metode_pengadaan_id == MetodePengadaanConst::PENGADAAN_LANGSUNG){
+                    $action = url("api/pengadaans/{$this->id}/kontrak?no=");
+                }else{
+                    $action = url("api/pengadaans/{$this->id}/lanjut");
+                }
+                
+                
+            }
             
 
-            if(($this->status_pengadaan_id == StatusPengadaanConst::SKP || $this->status_pengadaan_id == StatusPengadaanConst::PPH ) && ($user->id == 22)){
+            if ($this->status_pengadaan_id == StatusPengadaanConst::SKP && ($user->id == UserIdConst::PBJ)) {
                 $action = url("api/pengadaans/{$this->id}/kontrak?no=");
             }
 
-            if($this->status_pengadaan_id == StatusPengadaanConst::KONTRAK ){
+            if ($this->status_pengadaan_id == StatusPengadaanConst::KONTRAK) {
                 $action = null;
             }
+
+            // PBJ =========================================================================
         }
         $metode_pengadaan = null;
-        if($this->metodePengadaan != null){
+        if ($this->metodePengadaan != null) {
             $metode_pengadaan = $this->metodePengadaan->metode_pengadaan;
         }
 

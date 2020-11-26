@@ -37,8 +37,8 @@ class StatusPengadaanConst{
 }
 
 class JenisPengadaanConst{
-    const BARANG = 1;
-    const JASA = 2;
+    const BARANG = 2;
+    const JASA = 1;
 }
 
 class JenisAnggaranConst{
@@ -83,6 +83,12 @@ class StateDocumentConst{
     CONST PBJ = 3;
 }
 
+
+class UserIdConst{
+    const KEUANGAN = 15;
+    const MADM = 20;
+    const PBJ = 22;
+}
 
 class TypeNotificationConst{
     const DOKUMEN = 1;

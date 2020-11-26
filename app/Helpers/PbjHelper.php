@@ -20,12 +20,12 @@ class PbjHelper
 
         $user = $notification->user;
         $token_list = $user->fcmToken->pluck("token")->toArray();
-    
+
         fcm()
             ->to($token_list) // $recipients must an array
             ->priority('normal')
             ->timeToLive(0)
-            ->data([  
+            ->data([
                 'data' => $notification->data->toArray(),
             ])
             ->notification([
@@ -35,47 +35,52 @@ class PbjHelper
             ->send();
     }
 
-    public static function buildJudul($judul){
-        if(strlen($judul) > 80){
-            return substr($judul,0,80)."...";
+    public static function buildJudul($judul)
+    {
+        if (strlen($judul) > 80) {
+            return substr($judul, 0, 80) . "...";
         }
         return $judul;
     }
 
-    public static function buildDocumentActivity($dokumen, $type){
+    public static function buildDocumentActivity($dokumen, $type)
+    {
 
-        switch($type){
-            case 1: 
+        switch ($type) {
+            case 1:
                 $keterangan = "Diteruskan / Approved";
-            break;
+                break;
             case 2:
                 $keterangan = "Revisi";
-            break;
+                break;
             case 3:
                 $keterangan = "Konfirmasi";
-            break;
+                break;
             case 4:
                 $keterangan = "Dikembalikan";
-            break;   
+                break;
         }
 
         $activity = new ActivityDokumen([
             "dokumen_id" => $dokumen->id,
             "from_user_id" => $dokumen->posisi_user_id,
             "to_user_id" => $type == 4 ? $dokumen->posisi_user_id : $dokumen->prev_user_id,
-            "state" =>$dokumen->state_document,
+            "state" => $dokumen->state_document,
             "step" => $dokumen->step,
             "keterangan" => $keterangan,
         ]);
         $activity->save();
     }
 
-    public static function buildKeteranganDokumen($dokumen){
+    public static function buildKeteranganDokumen($dokumen)
+    {
         $posisi_role_id = $dokumen->posisi->role->id;
         $posisi_jabatan = $dokumen->posisi->jabatan->jabatan_name;
 
         $jenis_dokumen = $dokumen->jenis_dokumen_id;
         $step_dokumen = $dokumen->step;
+        $last_step = $dokumen->last_step;
+
 
 
         $status = $dokumen->statusDokumen;
@@ -87,7 +92,7 @@ class PbjHelper
                 if ($step_dokumen == 0) {
                     $keterangan_status_dokumen = "Direvisi oleh " . $posisi_jabatan;
                 } else {
-                    $keterangan_status_dokumen = Step::where("jenis_dokumen_id", $jenis_dokumen)->where("step", $step_dokumen-1)->first()->step_name;
+                    $keterangan_status_dokumen = Step::where("jenis_dokumen_id", $jenis_dokumen)->where("step", $last_step)->first()->step_name;
                 }
                 break;
             case StatusDokumenConst::REVIEW:
@@ -99,17 +104,20 @@ class PbjHelper
             case StatusDokumenConst::APPROVE:
                 $keterangan_status_dokumen = "Approved PBJ";
                 break;
+            case StatusDokumenConst::KEU:
+                $keterangan_status_dokumen = "Approved Keuangan";
+                break;
         }
 
         return $keterangan_status_dokumen;
-
     }
 
-    public static function convertToDaysHours($time){
+    public static function convertToDaysHours($time)
+    {
         $time = abs($time);
         $days = floor($time / 24);
         $hours = ($time % 24);
-        $format = "%d Hari".($hours != 0 ? " %02d Jam" : "");
+        $format = "%d Hari" . ($hours != 0 ? " %d Jam" : "");
         return sprintf($format, $days, $hours);
     }
 }

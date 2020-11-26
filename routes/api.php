@@ -73,6 +73,12 @@ Route::middleware(['jwt.verify:'.multiroles([RoleConst::ADMIN,RoleConst::RENDAL,
     Route::get('pengadaans',[PengadaanController::class,'index']);
 
     Route::get('pengadaans/{id}/lanjut-pbj',[PengadaanController::class,'lanjutPBJ']);
+
+    Route::get('pengadaans/{id}/lanjut-madm',[PengadaanController::class,'lanjutMADM']);
+    
+    Route::get('pengadaans/{id}/konfirmasi-madm',[PengadaanController::class,'konfirmasiMADM']);
+
+
     Route::get('pengadaans/{id}/metode/{metode}',[PengadaanController::class,'setPengadaan']);
     Route::get('pengadaans/{id}/lanjut',[PengadaanController::class,'lanjutPengadaan']);
     Route::get('pengadaans/{id}/kontrak',[PengadaanController::class,'kontrak']);
@@ -118,6 +124,8 @@ Route::get("test", function(Request $request){
 
 });
 
+
+Route::post("step/{id}",[DokumenController::class,"editStep"]);
 
 Route::get("havi",function(Request $request){
    $dokumen = Dokumen::all()->first();

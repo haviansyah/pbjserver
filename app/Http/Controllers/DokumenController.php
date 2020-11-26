@@ -15,12 +15,14 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use JenisDokumenConst;
+use JenisPengadaanConst;
 use JWTAuth;
 use RoleConst;
 use RoleConstId;
 use StateDocumentConst;
 use StatusDokumenConst;
 use TypeNotificationConst;
+use UserIdConst;
 
 class DokumenController extends Controller
 {
@@ -42,7 +44,7 @@ class DokumenController extends Controller
                 $role = $step["role_id"];
                 $submit = $step["submit"];
                 $revise = $step["revise"];
-                $step_arr[$idx][] = [$role,[$submit,$revise]];
+                $step_arr[$idx][] = [$role, [$submit, $revise]];
             }
         }
         $this->step = $step_arr;
@@ -98,8 +100,8 @@ class DokumenController extends Controller
                 if (array_key_exists(1, $this->step[$jenis_dokumen][$step_dokumen])) {
                     $actions_list = $this->step[$jenis_dokumen][$step_dokumen][1];
                     foreach ($actions_list as $act) {
-                        if($act!= null)
-                        array_push($action, $this->buildAction($id, $act));
+                        if ($act != null)
+                            array_push($action, $this->buildAction($id, $act));
                     }
                 }
             }
@@ -143,8 +145,18 @@ class DokumenController extends Controller
         $step_dokumen = $data->step;
 
         $step_next = $step_dokumen + 1;
+
+        // SAAT PRA PENGADAAN
         if ($data->state_document == 1) {
             // Get Next STEP
+
+            // CEK APAKAH DOKUMEN PR & Jenis Pengadaan adalah JASA MAKA SKIP AMU INVENTORY
+            if ($data->jenis_dokumen_id == JenisDokumenConst::PR 
+            && $data->pengadaan->jenis_pengadaan_id == JenisPengadaanConst::JASA
+            && $data->step == 0 ) {
+                // LANGSUNG APPROVAL MANAGER BIDANG
+                $step_next = 2;
+            }
 
             // Ambil role id selanjutnya
             $role_next = $this->step[$jenis_dokumen][$step_next][0];
@@ -188,13 +200,15 @@ class DokumenController extends Controller
                 $data->save();
                 $notif->save();
 
-                PbjHelper::buildDocumentActivity($data,1);
+                PbjHelper::buildDocumentActivity($data, 1);
                 PbjHelper::sendNotification($notif);
             } catch (Exception $e) {
                 return $e;
             }
 
             return response()->json(["status" => "OK"], 200);
+
+            // SAAT DI KEUANGAN
         } else if ($data->state_document == 2) {
 
             if ($posisi_dokumen_role == RoleConstId::RENDAL) {
@@ -216,38 +230,41 @@ class DokumenController extends Controller
 
                     $data->save();
                     $notif->save();
-                    PbjHelper::buildDocumentActivity($data,1);
+                    PbjHelper::buildDocumentActivity($data, 1);
                     PbjHelper::sendNotification($notif);
                 } catch (Exception $e) {
                     return $e;
                 }
             } else {
                 // IF APPROVED BY KEUANGAN
-                $madm_id =  20;
+                // $madm_id =  20;
                 try {
-                    $data->prev_user_id = $data->posisi_user_id;
-                    $data->posisi_user_id = $madm_id;
-                    $data->step = $step_next;
-                    $data->last_step =  $step_dokumen;
-                    $data->status_dokumen_id = StatusDokumenConst::MASUK;
+                    // $data->prev_user_id = $data->posisi_user_id;
+                    // $data->posisi_user_id = $madm_id;
+                    // $data->step = $step_next;
+                    // $data->last_step =  $step_dokumen;
+                    $data->status_dokumen_id = StatusDokumenConst::KEU;
 
-                    $notifBody = $this->buildNotifBody(1, User::find($data->prev_user_id)->name, $data);
-                    $notif = new Notification([
-                        "user_id" => $madm_id,
-                        "title" => "Dokumen masuk",
-                        "body" => $notifBody,
-                        "data_id" => $data->id,
-                        "data_type" => TypeNotificationConst::DOKUMEN
-                    ]);
+                    // $notifBody = $this->buildNotifBody(1, User::find($data->prev_user_id)->name, $data);
+                    // $notif = new Notification([
+                    //     "user_id" => $madm_id,
+                    //     "title" => "Dokumen masuk",
+                    //     "body" => $notifBody,
+                    //     "data_id" => $data->id,
+                    //     "data_type" => TypeNotificationConst::DOKUMEN
+                    // ]);
+                    // $notif->save();
+                    // PbjHelper::sendNotification($notif);
 
                     $data->save();
-                    $notif->save();
-                    PbjHelper::buildDocumentActivity($data,1);
-                    PbjHelper::sendNotification($notif);
+                    PbjHelper::buildDocumentActivity($data, 1);
+                    
                 } catch (Exception $e) {
                     return $e;
                 }
             }
+
+            // SAAT DOKUMEN DI PBJ
         } else if ($data->state_document == 3) {
 
             if ($posisi_dokumen_role == RoleConstId::RENDAL) {
@@ -270,7 +287,7 @@ class DokumenController extends Controller
 
                     $data->save();
                     $notif->save();
-                    PbjHelper::buildDocumentActivity($data,1);
+                    PbjHelper::buildDocumentActivity($data, 1);
                     PbjHelper::sendNotification($notif);
                 } catch (Exception $e) {
                     return $e;
@@ -280,7 +297,7 @@ class DokumenController extends Controller
                 try {
                     $data->status_dokumen_id = StatusDokumenConst::APPROVE;
                     $data->save();
-                    PbjHelper::buildDocumentActivity($data,1);
+                    PbjHelper::buildDocumentActivity($data, 1);
                 } catch (Exception $e) {
                     return $e;
                 }
@@ -305,7 +322,7 @@ class DokumenController extends Controller
 
             $data->confirmed_at = new Carbon();
             $data->save();
-            PbjHelper::buildDocumentActivity($data,3);
+            PbjHelper::buildDocumentActivity($data, 3);
         } catch (Exception $e) {
             return response()->json($e, 400);
         }
@@ -333,7 +350,7 @@ class DokumenController extends Controller
 
             $data->save();
             $notif->save();
-            PbjHelper::buildDocumentActivity($data,2);
+            PbjHelper::buildDocumentActivity($data, 2);
             PbjHelper::sendNotification($notif);
         } catch (Exception $e) {
             return response()->json($e, 400);
@@ -364,7 +381,7 @@ class DokumenController extends Controller
 
             $data->save();
             $notif->save();
-            PbjHelper::buildDocumentActivity($data,4);
+            PbjHelper::buildDocumentActivity($data, 4);
             PbjHelper::sendNotification($notif);
         } catch (Exception $e) {
             return response()->json($e, 400);
@@ -407,6 +424,13 @@ class DokumenController extends Controller
                 });
         }
 
+        // KALAU MADM HIDE DOKUMEN YANG SUDAH DI APPROVE SAMA KEUANGAN
+        if($user->id == UserIdConst::MADM){
+            $data = $data->where(function($q){
+                return $q->where("state_document","!=",StateDocumentConst::KEU);
+            });
+        }
+
         if ($request->term && $request->term != "") {
             $term = $request->term;
             $data =  $data->whereHas("pengadaan", function ($query) use ($term) {
@@ -423,8 +447,41 @@ class DokumenController extends Controller
                 }
             }
         }
+
+        if ($request->get("status_dokumen_id") && count($request->get("status_dokumen_id")) != 0) {
+            $status_dokumen = $request->get("status_dokumen_id");
+            if (!in_array(null, $status_dokumen)) {
+                $data = $data->where(function ($q) use ($user, $status_dokumen) {
+                    if (in_array(3, $status_dokumen)) array_push($status_dokumen, 1);
+                    return $q->where("posisi_user_id", $user->id)->whereIn("status_dokumen_id", $status_dokumen);
+                });
+            }
+        }
+
         $data = $data->where("status_dokumen_id", "!=", StatusDokumenConst::APPROVE);
-        return ResourcesDokumen::collection($data->get());
+        return ResourcesDokumen::collection($data->get()->sortBy("sla"));
         // return response()->json($dokumens,200);
+    }
+
+
+    public function showStep()
+    {
+        $data = Step::all();
+        return view("step", compact("data"));
+    }
+
+    public function editStep($id, Request $request)
+    {
+        $step = Step::findOrFail($id);
+        try {
+            $sla_days = $request->get("sla");
+            $sla_hours = $sla_days * 24;
+            $step->sla = $sla_hours;
+            $step->save();
+        } catch (Exception $e) {
+            return response()->json(["error" => $e], 400);
+        }
+
+        return response()->json(["status" => "ok"], 200);
     }
 }

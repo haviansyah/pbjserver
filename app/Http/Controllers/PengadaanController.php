@@ -11,8 +11,10 @@ use JenisDokumenConst;
 use JWTAuth;
 use MetodePengadaanConst;
 use RoleConst;
+use StateDocumentConst;
 use StatusDokumenConst;
 use StatusPengadaanConst;
+use UserIdConst;
 
 class PengadaanController extends Controller
 {   
@@ -121,11 +123,19 @@ class PengadaanController extends Controller
         }
 
         if($statusPengadaan == StatusPengadaanConst::AANWIZJING){
-            $next_status = StatusPengadaanConst::SKP;
+            $next_status = StatusPengadaanConst::PPH;
         }
 
-        if($statusPengadaan == StatusPengadaanConst::PPH || $statusPengadaan == StatusPengadaanConst::SKP){
-            $next_status = StatusPengadaanConst::KONTRAK; 
+        if($statusPengadaan == StatusPengadaanConst::PPH){
+            if($metodePengadaan == MetodePengadaanConst::PENGADAAN_LANGSUNG){
+                $next_status = StatusPengadaanConst::SKP;
+            }else{
+                $next_status = StatusPengadaanConst::KONTRAK; 
+            }
+        }
+
+        if($statusPengadaan == StatusPengadaanConst::SKP){
+            $next_status = StatusPengadaanConst::KONTRAK;
         }
 
         $pengadaan->status_pengadaan_id = $next_status;
@@ -165,6 +175,61 @@ class PengadaanController extends Controller
                 $doc->posisi_user_id = 22;
                 $doc->state_document = 3;
                 $doc->status_dokumen_id = StatusDokumenConst::MASUK;
+                $doc->save();
+            }
+        }catch(Exception $e){
+            return response()->json(["error"=>$e],400);
+
+        }
+        return response()->json(["status"=>"ok"],200);
+    }
+
+    public function lanjutMADM($id){
+
+        try{
+            $pengadaan = Pengadaan::findOrFail($id);
+
+            $tor = $pengadaan->dokumen->where("jenis_dokumen_id", JenisDokumenConst::TOR)->first();
+            $dmr = $pengadaan->dokumen->where("jenis_dokumen_id", JenisDokumenConst::DMR)->first();
+            $pr = $pengadaan->dokumen->where("jenis_dokumen_id", JenisDokumenConst::PR)->first();
+
+            $alldoc = [$tor, $dmr, $pr];
+
+            $pengadaan->state_pengadaan = 3; //STATE PENGADAAN DI MADM
+            $pengadaan->save();
+            
+
+            foreach ($alldoc as $doc) {
+                $step_dokumen = $doc->step;
+
+                $step_next = $step_dokumen + 1;
+                $doc->last_step = $doc->step;
+                $doc->step = $step_next;
+                $doc->posisi_user_id = UserIdConst::MADM;
+                $doc->state_document = StateDocumentConst::KEU;
+                $doc->status_dokumen_id = StatusDokumenConst::MASUK;
+                $doc->save();
+            }
+        }catch(Exception $e){
+            return response()->json(["error"=>$e],400);
+
+        }
+        return response()->json(["status"=>"ok"],200);
+    }
+
+    // ROUTE `konfirmasi-madm`
+    public function konfirmasiMADM($id){
+        try{
+            $pengadaan = Pengadaan::findOrFail($id);
+
+            $tor = $pengadaan->dokumen->where("jenis_dokumen_id", JenisDokumenConst::TOR)->first();
+            $dmr = $pengadaan->dokumen->where("jenis_dokumen_id", JenisDokumenConst::DMR)->first();
+            $pr = $pengadaan->dokumen->where("jenis_dokumen_id", JenisDokumenConst::PR)->first();
+
+            $alldoc = [$tor, $dmr, $pr];
+            
+            foreach ($alldoc as $doc) {
+                $doc->status_dokumen_id = StatusDokumenConst::REVIEW;
                 $doc->save();
             }
         }catch(Exception $e){
