@@ -1,6 +1,6 @@
 <a href="/absensi/beranda" class="navbar-brand">
   <img src="{{ url('images/logoIPApp.png') }}" alt="INDONESIA POWER Logo" class="brand-image">
-  <span div class="d-none d-md-inline">PBJ App</span>
+  <span div class="d-none d-md-inline">Admin DIGIMON-P</span>
   <!-- <span class="brand-text font-weight-light">AdminLTE 3</span> -->
 </a>
 <!-- <div class="navbar-collapse"> -->
