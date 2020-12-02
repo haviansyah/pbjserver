@@ -65,11 +65,11 @@ class Pengadaan extends JsonResource
                     $status_madm = false;
                 }
             }
-            
+
             if ($user->id == UserIdConst::MADM && $this->state_pengadaan == 3) {
                 $action = url("api/pengadaans/{$this->id}/konfirmasi-madm");
 
-                if($status_madm){
+                if ($status_madm) {
                     $action = url("api/pengadaans/{$this->id}/lanjut-pbj");
                 }
             }
@@ -96,16 +96,14 @@ class Pengadaan extends JsonResource
             // KALAU PPH KALAU LELANG SKP DULU KALAU ENGGA LANJUT
 
             if ($this->status_pengadaan_id == StatusPengadaanConst::PPH && ($user->id == UserIdConst::PBJ)) {
-                
-                if($this->metode_pengadaan_id == MetodePengadaanConst::PENGADAAN_LANGSUNG){
+
+                if ($this->metode_pengadaan_id == MetodePengadaanConst::PENGADAAN_LANGSUNG) {
                     $action = url("api/pengadaans/{$this->id}/kontrak?no=");
-                }else{
+                } else {
                     $action = url("api/pengadaans/{$this->id}/lanjut");
                 }
-                
-                
             }
-            
+
 
             if ($this->status_pengadaan_id == StatusPengadaanConst::SKP && ($user->id == UserIdConst::PBJ)) {
                 $action = url("api/pengadaans/{$this->id}/kontrak?no=");
@@ -121,19 +119,22 @@ class Pengadaan extends JsonResource
         $days_remaining = null;
         $time_remaining = 0;
         $sla = null;
-        if ($this->metodePengadaan != null) {
-            $metode_pengadaan = $this->metodePengadaan->metode_pengadaan;
+        if ($this->status_pengadaan_id != StatusPengadaanConst::KONTRAK) {
 
-            $sla =  Step::where(function($q) use($metode_pengadaan){
-                return $q->where("jenis_dokumen_id",4)->where("step",$this->metodePengadaan->id);
-            })->get()->first()->sla;
-            $confirmed_at = $this->confirmed_at?? $this->created_at;
-            $elapsed_time = $confirmed_at->diffInHours(new Carbon()); 
-            $time_remaining = $sla - $elapsed_time;
-            $days_remaining = ($time_remaining < 1 ? "-" : "" ).PbjHelper::convertToDaysHours($time_remaining) ; 
+
+            if ($this->metodePengadaan != null) {
+                $metode_pengadaan = $this->metodePengadaan->metode_pengadaan;
+
+                $sla =  Step::where(function ($q) use ($metode_pengadaan) {
+                    return $q->where("jenis_dokumen_id", 4)->where("step", $this->metodePengadaan->id);
+                })->get()->first()->sla;
+                $confirmed_at = $this->confirmed_at ?? $this->created_at;
+                $elapsed_time = $confirmed_at->diffInHours(new Carbon());
+                $time_remaining = $sla - $elapsed_time;
+                $days_remaining = ($time_remaining < 1 ? "-" : "") . PbjHelper::convertToDaysHours($time_remaining);
+            }
         }
-        
-          
+
 
         return [
             'id' => $this->id,
