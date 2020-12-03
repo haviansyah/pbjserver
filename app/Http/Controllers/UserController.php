@@ -96,13 +96,13 @@ class UserController extends Controller
             }
         } catch (TokenExpiredException $e) {
 
-            return response()->json(['token_expired'], $e->getStatusCode());
+            return response()->json(['token_expired'], 400);
         } catch (TokenInvalidException $e) {
 
             return response()->json(['token_invalid'], 400);
         } catch (JWTException $e) {
 
-            return response()->json(['token_absent'], $e->getStatusCode());
+            return response()->json(['token_absent'], 400);
         }
         $user_role = $user->role;
         return response()->json([

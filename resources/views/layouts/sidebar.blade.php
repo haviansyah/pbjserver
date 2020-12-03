@@ -19,6 +19,14 @@
         </p>
       </a>
     </li>
+    <li class="nav-item">
+      <a href="{{url("/admin/pengadaan")}}" class="{{ (request()->segment(2) == 'pengadaan') ? 'nav-link active' : 'nav-link inactive' }}">
+        <i class="nav-icon fas fa-list"></i>
+        <p>
+          Pengadaan 
+        </p>
+      </a>
+    </li>
   </ul>
 </nav>
 <!-- /.sidebar-menu -->

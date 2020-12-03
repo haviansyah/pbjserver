@@ -45,6 +45,12 @@ class PengadaanController extends Controller
         return response()->json(compact('pengadaan'),201);
     }
 
+
+    public function admin_index(){
+        $data = Pengadaan::all();
+        return view("pengadaan",compact("data"));
+    }
+
     public function delete($id){
         $pengadaan = Pengadaan::findOrFail($id);
         if($pengadaan->delete()){

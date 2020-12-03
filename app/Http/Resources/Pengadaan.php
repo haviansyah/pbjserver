@@ -119,10 +119,10 @@ class Pengadaan extends JsonResource
         $days_remaining = null;
         $time_remaining = 0;
         $sla = null;
+        if ($this->metode_pengadaan_id != null) $metode_pengadaan = $this->metodePengadaan->metode_pengadaan;
         if ($this->status_pengadaan_id != StatusPengadaanConst::KONTRAK) {
 
-
-            if ($this->metodePengadaan != null) {
+            if ($this->metode_pengadaan_id != null) {
                 $metode_pengadaan = $this->metodePengadaan->metode_pengadaan;
 
                 $sla =  Step::where(function ($q) use ($metode_pengadaan) {

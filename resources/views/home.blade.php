@@ -203,7 +203,7 @@
             } ]
         });
 
-        $(".btn-edit").click(function(e){
+        $(document).on("click",".btn-edit",function(e){
             var id = $(e.currentTarget).data("id");
 
             $.ajax({
