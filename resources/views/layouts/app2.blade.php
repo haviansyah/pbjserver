@@ -44,7 +44,7 @@
     .layout-top-nav .wrapper .main-header .brand-image {
       margin-top: .1rem;
       margin-right: .2rem;
-      width: 100px;
+      width: 150px;
       height: auto;
     }
 

@@ -51,6 +51,24 @@ class PengadaanController extends Controller
         return view("pengadaan",compact("data"));
     }
 
+    public function admin_detail($id){
+        $data = Pengadaan::findOrFail($id);
+        return view("detailpengadaan",compact("data"));
+    }
+
+    public function admin_delete($id){
+        $data = Pengadaan::findOrFail($id);
+        try{
+            $data->delete();
+            return response("OK",200);
+        }catch(Exception $e){
+            return response("NOT OK",400);
+        }
+        
+        
+        
+    }
+
     public function delete($id){
         $pengadaan = Pengadaan::findOrFail($id);
         if($pengadaan->delete()){

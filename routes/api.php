@@ -127,6 +127,10 @@ Route::get("test", function(Request $request){
 
 Route::post("step/{id}",[DokumenController::class,"editStep"]);
 
+Route::delete('admin/dokumen/{id}', [App\Http\Controllers\DokumenController::class, 'admin_delete'])->name('dokumen.delete');
+Route::delete('admin/pengadaan/{id}', [App\Http\Controllers\PengadaanController::class, 'admin_delete'])->name('pengadaan.delete');
+
+
 Route::get("havi",function(Request $request){
    $dokumen = Dokumen::all()->first();
     dd($dokumen->stepModel);

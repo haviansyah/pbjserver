@@ -25,6 +25,7 @@ Route::middleware('auth')->group(function(){
     Route::get('admin/users/delete/{id}', [App\Http\Controllers\UserController::class, 'deleteUser'])->name('delete.user');
     Route::get('admin/step/', [App\Http\Controllers\DokumenController::class, 'showStep'])->name('step.all');
     Route::get('admin/pengadaan/', [App\Http\Controllers\PengadaanController::class, 'admin_index'])->name('pengadaan.all');
+    Route::get('admin/pengadaan/{id}', [App\Http\Controllers\PengadaanController::class, 'admin_detail'])->name('pengadaan.detail');
 
 });
 

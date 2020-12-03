@@ -25,19 +25,13 @@
                         <table id="dataTable" class="table table-bordered table-striped">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>ID</th>
                                     <th>Jenis Dokumen</th>
                                     <th>Posisi Role</th>
                                     <th>Status Dokumen</th>
                                     <th>SLA (Hari)</th>
                                 </tr>
-                                <tr>
-                                    <th></th>
-                                    <th>Jenis Dokumen</th>
-                                    <th>Posisi Role</th>
-                                    <th>Status Dokumen</th>
-                                    <th>SLA (Hari)</th>
-                                </tr>
+                               
                             </thead>
                             <tbody>
                                 @foreach($data as $step)
@@ -50,6 +44,15 @@
                                 </tr>
                                 @endforeach
                             </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th></th>
+                                    <th>Jenis Dokumen</th>
+                                    <th>Posisi Role</th>
+                                    <th>Status Dokumen</th>
+                                    <th>SLA (Hari)</th>
+                                </tr>
+                            </tfoot>
                         </table>
 
                     </div>
@@ -70,14 +73,16 @@
             responsive: true,
             initComplete: function() {
                 this.api().columns().every(function() {
-                    console.log("column");
                     var column = this;
+                    if(column.index() == 4) return;
                     var select = $('<select class="form-control"><option value=""></option></select>')
-                        .appendTo($(column.header()).empty())
+                        .appendTo($(column.footer()).empty())
                         .on('change', function() {
                             var val = $.fn.dataTable.util.escapeRegex(
                                 $(this).val()
                             );
+
+                            
 
                             column
                                 .search(val ? '^' + val + '$' : '', true, false)
@@ -89,15 +94,24 @@
                     });
                 });
             },
-            "columnDefs": [{
+            "columnDefs": [
+                {
                     "targets": [0],
-                    "visible": false,
-                    "searchable": false
+                    "responsivePriority": -1,
                 },
                 {
+                    "targets": [2],
+                    "responsivePriority": 102,
+                },
+                {
+                    "targets": [3],
+                    "responsivePriority": 1,
+                },
+                {
+                    responsivePriority: 1,
+                    "searchable" : false,
+                    "sortable" : false,
                     "targets": 4,
-                    "data": "download_link",
-                    "width": 100,
                     "render": function(data, type, row, meta) {
                         // return '<a class="btn-edit btn btn-default" href="#" data-id="'+data+'"><i class="fas fa-pencil-alt"></i></a> <a class="btn btn-danger ml-1" href="admin/users/delete/'+data+'"><i class="fas fa-trash"></i></a>';
                         return `

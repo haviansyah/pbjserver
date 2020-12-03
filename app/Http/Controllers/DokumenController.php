@@ -52,6 +52,16 @@ class DokumenController extends Controller
     }
 
    
+    public function admin_delete($id){
+        $data = Dokumen::findOrFail($id);
+        try{
+            $data->delete();
+            return response("OK",200);
+        }catch(Exception $e){
+            return response("NOT OK",400);
+        }
+        
+    }
 
     public function store(Request $request)
     {

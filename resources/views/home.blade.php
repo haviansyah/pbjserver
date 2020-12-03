@@ -132,12 +132,12 @@
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
-            <div class="col-sm-6">
+            <div class="col-6">
                 <h1 class="m-0 text-dark">List User</h1>
 
             </div><!-- /.col -->
-            <div class="col-sm-6">
-                <button href="#" class="btn btn-primary float-sm-right" data-toggle="modal" data-target="#modal-lg">
+            <div class="col-6 ">
+                <button href="#" class="btn btn-primary float-right" data-toggle="modal" data-target="#modal-lg">
                     Insert User
                 </button>
             </div>
@@ -193,7 +193,9 @@
 <script>
     $(function() {
         $("#dataTable").DataTable({ 
+            responsive: true,
             "columnDefs": [ {
+                responsivePriority: 1,
                 "targets": 4,
                 "data": "download_link",
                 "render": function ( data, type, row, meta ) {

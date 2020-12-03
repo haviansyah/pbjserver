@@ -1,11 +1,10 @@
 /* Login Page */
 .login-page, .register-page{
-    background-image: url("/assets/revamp/image/background.jpg");
+    background-image: url("../images/background.jpg");
     background-position: center;
     background-size: cover;
     justify-content: flex-start;
     background-attachment: fixed;
-      
 } 
 
 .login-page::before{
@@ -15,7 +14,7 @@
     width: 100%;
     height: 100%;
     content: "";
-    background-color: rgba(0, 123, 255, 0.3);
+    background-color: rgba(8, 48, 90, 0.712);
     z-index: -1;
 }
 
@@ -29,7 +28,7 @@
 
 
 .login-logo img{
-    width : 50%;
+    width : 80%;
 }
 
 .login-logo span {
@@ -85,7 +84,7 @@ nav{
 .layout-top-nav .wrapper .main-header .brand-image {
     margin-top: .1rem;
     margin-right: .2rem;
-    width: 100px;
+    width: 200px;
     height: auto;
 }
 

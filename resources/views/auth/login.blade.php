@@ -38,7 +38,7 @@
 
 
     <!-- Custom Style -->
-    <link rel="stylesheet" href="{{ url ('css/style.css') }}">
+    <link rel="stylesheet" href="{{ url ('css/style.css?v2') }}">
 
     <!-- Google Font: Source Sans Pro -->
     <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
@@ -51,7 +51,7 @@
         <div class="card">
             <div class="login-logo">
                 <a href="../../index2.html">
-                    <img src="{{ url('images/logoIP.png') }}" alt="Logo Indonesia Power">
+                    <img src="{{ url('images/logo-digimon.png') }}" alt="Logo Indonesia Power">
                     <span>
                         PLTU BANTEN 1 SURALAYA OMU
                     </span>
