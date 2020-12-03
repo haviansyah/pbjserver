@@ -18,7 +18,7 @@
     <div class="container-fluid">
         <div class="row">
 
-            <div class="col-md-4">
+            <div class="col-md-5">
                 <div class="card card-primary">
                     <div class="card-header">
                         <h3 class="card-title">Data Pengadaan</h3>
@@ -62,7 +62,7 @@
                 </div>
             </div>
 
-            <div class="col-md-8">
+            <div class="col-md-7">
                 <div class="card card-success">
                     <div class="card-header">
                         <h3 class="card-title">Dokumen</h3>
