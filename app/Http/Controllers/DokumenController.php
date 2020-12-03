@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\PbjHelper;
+use App\Http\Resources\ActivityDocument;
 use App\Http\Resources\Dokumen as ResourcesDokumen;
 use App\Http\Resources\Pengadaan;
 use App\Models\Dokumen;
@@ -51,16 +52,33 @@ class DokumenController extends Controller
         $this->step = $step_arr;
     }
 
-   
-    public function admin_delete($id){
+
+    public function admin_delete($id)
+    {
         $data = Dokumen::findOrFail($id);
-        try{
+        try {
             $data->delete();
-            return response("OK",200);
-        }catch(Exception $e){
-            return response("NOT OK",400);
+            return response("OK", 200);
+        } catch (Exception $e) {
+            return response("NOT OK", 400);
         }
-        
+    }
+
+    public function admin_timeline($id)
+    {
+        $data = Dokumen::findOrFail($id);
+        $timeline = $data->activity;
+
+        // $grouped = $timeline->groupBy(function ($item) {
+        //     return $item->created_at->format('d M Y');
+        // });
+
+        $grouped = ActivityDocument::collection($timeline)->groupBy(function ($item) {
+            return $item->created_at->format('d M Y');
+        });
+
+        //    $grouped = ActivityDocument::collection($grouped);
+        return response()->json($grouped, 200);
     }
 
     public function store(Request $request)
@@ -164,9 +182,11 @@ class DokumenController extends Controller
             // Get Next STEP
 
             // CEK APAKAH DOKUMEN PR & Jenis Pengadaan adalah JASA MAKA SKIP AMU INVENTORY
-            if ($data->jenis_dokumen_id == JenisDokumenConst::PR 
-            && $data->pengadaan->jenis_pengadaan_id == JenisPengadaanConst::JASA
-            && $data->step == 0 ) {
+            if (
+                $data->jenis_dokumen_id == JenisDokumenConst::PR
+                && $data->pengadaan->jenis_pengadaan_id == JenisPengadaanConst::JASA
+                && $data->step == 0
+            ) {
                 // LANGSUNG APPROVAL MANAGER BIDANG
                 $step_next = 2;
             }
@@ -271,7 +291,6 @@ class DokumenController extends Controller
 
                     $data->save();
                     PbjHelper::buildDocumentActivity($data, 1);
-                    
                 } catch (Exception $e) {
                     return $e;
                 }
@@ -438,9 +457,9 @@ class DokumenController extends Controller
         }
 
         // KALAU MADM HIDE DOKUMEN YANG SUDAH DI APPROVE SAMA KEUANGAN
-        if($user->id == UserIdConst::MADM){
-            $data = $data->where(function($q){
-                return $q->where("state_document","!=",StateDocumentConst::KEU);
+        if ($user->id == UserIdConst::MADM) {
+            $data = $data->where(function ($q) {
+                return $q->where("state_document", "!=", StateDocumentConst::KEU);
             });
         }
 

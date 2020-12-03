@@ -12,7 +12,7 @@ class ActivityDokumen extends Model
     protected $guarded = [];
 
     public function document(){
-        return $this->belongsTo("\App\Models\Dokumen");
+        return $this->belongsTo("App\Models\Dokumen","dokumen_id");
     }
 
     public function from()
@@ -23,5 +23,15 @@ class ActivityDokumen extends Model
     public function to()
     {
         return $this->belongsTo('App\Models\User',"to_user_id");
+    }
+    
+    public function stepRelationship(){
+        return Step::where(function($q){
+            $q->where("jenis_dokumen_id",$this->document->jenis_dokumen_id)->where("step",$this->step);
+        });
+    }
+
+    public function getStepModelAttribute(){
+        return $this->stepRelationship()->first();
     }
 }
