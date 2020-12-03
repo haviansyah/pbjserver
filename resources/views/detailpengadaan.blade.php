@@ -42,6 +42,9 @@
                         <strong>Dibuat Oleh</strong>
                         <p class="text-muted">{{$data->createdBy->name}} ({{$data->createdBy->jabatan->jabatan_name}})</p>
 
+                        <strong>Metode Pengadaan</strong>
+                        <p class="text-muted">{{$data->metodePengadaan->metode_pengadaan}}</p>
+
                     </div>
                 </div>
             </div>
