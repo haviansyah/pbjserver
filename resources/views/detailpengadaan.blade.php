@@ -24,33 +24,40 @@
                         <h3 class="card-title">Data Pengadaan</h3>
                     </div>
                     <div class="card-body">
-                        <strong>Judul Pengadaan</strong>
-                        <p class="text-muted">{{$data->judul_pengadaan}}</p>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <strong>Judul Pengadaan</strong>
+                                <p class="text-muted">{{$data->judul_pengadaan}}</p>
+                            </div>
 
-                        <strong>Jenis Pengadaan</strong>
-                        <p class="text-muted">Pengadaan {{$data->jenisPengadaan->jenis_pengadaan}}</p>
+                            <div class="col-md-6">
+                                <strong>Jenis Pengadaan</strong>
+                                <p class="text-muted">Pengadaan {{$data->jenisPengadaan->jenis_pengadaan}}</p>
 
-                        <strong>Jenis Anggaran</strong>
-                        <p class="text-muted">{{$data->jenisAnggaran->jenis_anggaran}}</p>
+                                <strong>Jenis Anggaran</strong>
+                                <p class="text-muted">{{$data->jenisAnggaran->jenis_anggaran}}</p>
 
-                        <strong>Direksi Pekerjaan</strong>
-                        <p class="text-muted">{{$data->direksiPengadaan->direksi_pengadaan}}</p>
+                                <strong>Direksi Pekerjaan</strong>
+                                <p class="text-muted">{{$data->direksiPengadaan->direksi_pengadaan}}</p>
 
-                        <strong>Status Pengadaan</strong>
-                        <p class="text-muted">{{$data->statusPengadaan->status_pengadaan}}</p>
+                                <strong>Status Pengadaan</strong>
+                                <p class="text-muted">{{$data->statusPengadaan->status_pengadaan}}</p>
+                            </div>
 
-                        <strong>Dibuat Oleh</strong>
-                        <p class="text-muted">{{$data->createdBy->name}} ({{$data->createdBy->jabatan->jabatan_name}})</p>
+                            <div class="col-md-6">
+                                <strong>Dibuat Oleh</strong>
+                                <p class="text-muted">{{$data->createdBy->name}} ({{$data->createdBy->jabatan->jabatan_name}})</p>
 
-                        <strong>Metode Pengadaan</strong>
-                        <p class="text-muted">{{$data->metodePengadaan->metode_pengadaan}}</p>
+                                <strong>Metode Pengadaan</strong>
+                                <p class="text-muted">{{$data->metodePengadaan->metode_pengadaan}}</p>
 
-                        <strong>Nomor Kontrak</strong>
-                        <p class="text-muted">{{$data->nomor_kontrak}}</p>
+                                <strong>Nomor Kontrak</strong>
+                                <p class="text-muted">{{$data->nomor_kontrak}}</p>
 
-                        <strong>Tanggal Selesai Kontrak</strong>
-                        <p class="text-muted">{{$data->tanggal_selesai_kontrak ? $data->tanggal_selesai_kontrak->format("d M Y") : "-"}}</p>
-
+                                <strong>Tanggal Selesai Kontrak</strong>
+                                <p class="text-muted">{{$data->tanggal_selesai_kontrak ? $data->tanggal_selesai_kontrak->format("d M Y") : "-"}}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -61,28 +68,28 @@
                         <h3 class="card-title">Dokumen</h3>
                     </div>
                     <div class="card-body">
-                      <table class="table">
-                          <thead>
-                              <tr>
-                                  <th>Jenis Dokumen</th>
-                                  <th>Posisi</th>
-                                  <th>Status</th>
-                                  <th>Aksi</th>
-                              </tr>
-                          </thead>
-                          <tbody>
-                              @foreach($data->dokumen as $dokumen)
-                              <tr>
-                                  <td>{{$dokumen->jenisDokumen->jenis_dokumen_name}}</td>
-                                  <td>{{$dokumen->posisi->name}} ({{$dokumen->posisi->jabatan->jabatan_name}})</td>
-                                  <td>{{$dokumen->statusDokumen->status_dokumen_name}}</td>
-                                  <td>
-                                      <a href="" data-jenis="{{$dokumen->jenisDokumen->jenis_dokumen_name}}" data-id="{{$dokumen->id}}" class="button-delete btn btn-danger"><i class="fa fa-trash"></i></a>
-                                  </td>
-                              </tr>
-                              @endforeach
-                          </tbody>
-                      </table>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Jenis Dokumen</th>
+                                    <th>Posisi</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($data->dokumen as $dokumen)
+                                <tr>
+                                    <td>{{$dokumen->jenisDokumen->jenis_dokumen_name}}</td>
+                                    <td>{{$dokumen->posisi->name}} ({{$dokumen->posisi->jabatan->jabatan_name}})</td>
+                                    <td>{{$dokumen->statusDokumen->status_dokumen_name}}</td>
+                                    <td>
+                                        <a href="" data-jenis="{{$dokumen->jenisDokumen->jenis_dokumen_name}}" data-id="{{$dokumen->id}}" class="button-delete btn btn-danger"><i class="fa fa-trash"></i></a>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
 
                     </div>
                 </div>
@@ -99,31 +106,30 @@
 @section("javascripts")
 
 <script>
-
-    $(".button-delete-pengadaan").on("click",function(e){
+    $(".button-delete-pengadaan").on("click", function(e) {
         e.preventDefault();
         const id = "{{$data->id}}";
         var konfirmasi = confirm("Anda yakin ingin menghapus pengadaan {{$data->judul_pengadaan}} dan semua dokumen terkait?, karena operasi ini tidak dapat dikembalikan!");
-        if(konfirmasi){
+        if (konfirmasi) {
             $.ajax({
-                type : "DELETE",
-                url : "{{url('api/admin/pengadaan')}}/"+id,
-                success : function(e){
+                type: "DELETE",
+                url: "{{url('api/admin/pengadaan')}}/" + id,
+                success: function(e) {
                     window.location.replace("{{url('/admin/pengadaan')}}");
                 }
             })
         }
     });
-    $(".button-delete").on("click",function(e){
+    $(".button-delete").on("click", function(e) {
         e.preventDefault();
         const id = $(e.currentTarget).data("id");
         const jenis = $(e.currentTarget).data("jenis");
-        var konfirmasi = confirm("Anda yakin ingin menghapus dokumen "+jenis+" pengadaan {{$data->judul_pengadaan}}?, karena operasi ini tidak dapat dikembalikan!");
-        if(konfirmasi){
+        var konfirmasi = confirm("Anda yakin ingin menghapus dokumen " + jenis + " pengadaan {{$data->judul_pengadaan}}?, karena operasi ini tidak dapat dikembalikan!");
+        if (konfirmasi) {
             $.ajax({
-                type : "DELETE",
-                url : "{{url('api/admin/dokumen')}}/"+id,
-                success : function(e){
+                type: "DELETE",
+                url: "{{url('api/admin/dokumen')}}/" + id,
+                success: function(e) {
                     location.reload();
                 }
             })
