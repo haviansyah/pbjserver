@@ -45,6 +45,12 @@
                         <strong>Metode Pengadaan</strong>
                         <p class="text-muted">{{$data->metodePengadaan->metode_pengadaan}}</p>
 
+                        <strong>Nomor Kontrak</strong>
+                        <p class="text-muted">{{$data->nomor_kontrak}}</p>
+
+                        <strong>Tanggal Selesai Kontrak</strong>
+                        <p class="text-muted">{{$data->tanggal_selesai_kontrak ? $data->tanggal_selesai_kontrak->format("d M Y") : "-"}}</p>
+
                     </div>
                 </div>
             </div>
