@@ -15,7 +15,7 @@ class ActivityDocument extends JsonResource
     public function toArray($request)
     {
         return [
-            "from" => $this->to->name." (".$this->from->jabatan->jabatan_name.")",
+            "from" => $this->to->name." (".$this->to->jabatan->jabatan_name.")",
             "keterangan" => $this->keterangan,
             "jam" => $this->created_at->format('H:i:s'),
             "step" => $this->StepModel->step_name

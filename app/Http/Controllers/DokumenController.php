@@ -6,6 +6,7 @@ use App\Helpers\PbjHelper;
 use App\Http\Resources\ActivityDocument;
 use App\Http\Resources\Dokumen as ResourcesDokumen;
 use App\Http\Resources\Pengadaan;
+use App\Models\ActivityDokumen;
 use App\Models\Dokumen;
 use App\Models\DokumenDmr;
 use App\Models\DokumenPr;
@@ -68,16 +69,21 @@ class DokumenController extends Controller
     {
         $data = Dokumen::findOrFail($id);
         $timeline = $data->activity;
+        $activityBaru = new ActivityDokumen([
+            "dokumen_id" => $data->id,
+            "from_user_id" => $data->created_by_user_id,
+            "to_user_id" => $data->created_by_user_id,
+            "state" => 1,
+            "step" => 0,
+            "keterangan" => "Dokumen Dibuat",
+            "created_at" => $data->created_at
+        ]);
+        $timeline->push($activityBaru);
 
-        // $grouped = $timeline->groupBy(function ($item) {
-        //     return $item->created_at->format('d M Y');
-        // });
-
-        $grouped = ActivityDocument::collection($timeline)->groupBy(function ($item) {
+        $grouped = ActivityDocument::collection($timeline)->sortBy("created_at")->groupBy(function ($item) {
             return $item->created_at->format('d M Y');
         });
 
-        //    $grouped = ActivityDocument::collection($grouped);
         return response()->json($grouped, 200);
     }
 
