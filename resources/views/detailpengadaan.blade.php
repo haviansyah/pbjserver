@@ -90,10 +90,10 @@
                                     ({{$data->createdBy->jabatan->jabatan_name}})</p>
 
                                 <strong>Metode Pengadaan</strong>
-                                <p class="text-muted">{{$data->metodePengadaan->metode_pengadaan}}</p>
+                                <p class="text-muted">{{$data->metodePengadaan ? $data->metodePengadaan->metode_pengadaan : "-"}}</p>
 
                                 <strong>Nomor Kontrak</strong>
-                                <p class="text-muted">{{$data->nomor_kontrak}}</p>
+                                <p class="text-muted">{{$data->nomor_kontrak ?? "-"}}</p>
 
                                 <strong>Tanggal Selesai Kontrak</strong>
                                 <p class="text-muted">
