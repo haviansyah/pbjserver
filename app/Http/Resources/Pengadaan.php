@@ -119,6 +119,7 @@ class Pengadaan extends JsonResource
         $days_remaining = null;
         $time_remaining = 0;
         $sla = null;
+        $pbj = false;
         if ($this->metode_pengadaan_id != null) $metode_pengadaan = $this->metodePengadaan->metode_pengadaan;
         if ($this->status_pengadaan_id != StatusPengadaanConst::KONTRAK) {
 
@@ -132,6 +133,7 @@ class Pengadaan extends JsonResource
                 $elapsed_time = $confirmed_at->diffInHours(new Carbon());
                 $time_remaining = $sla - $elapsed_time;
                 $days_remaining = ($time_remaining < 1 ? "-" : "") . PbjHelper::convertToDaysHours($time_remaining);
+                $pbj = true;
             }
         }
         if($user->id !== UserIdConst::PBJ) $days_remaining = null;
@@ -155,7 +157,8 @@ class Pengadaan extends JsonResource
             "aksi" => $action,
             "sla" => $sla,
             "time_remaining" => $time_remaining,
-            "days_remaining" => $days_remaining
+            "days_remaining" => $days_remaining,
+            "is_pbj" => $pbj,
         ];
     }
 }
