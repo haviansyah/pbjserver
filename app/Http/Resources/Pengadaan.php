@@ -134,7 +134,7 @@ class Pengadaan extends JsonResource
                 $days_remaining = ($time_remaining < 1 ? "-" : "") . PbjHelper::convertToDaysHours($time_remaining);
             }
         }
-        if($user->id == UserIdConst::KEUANGAN) $days_remaining = null;
+        if($user->id !== UserIdConst::PBJ) $days_remaining = null;
 
         return [
             'id' => $this->id,
