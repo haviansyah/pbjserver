@@ -1,5 +1,6 @@
 <?php
 
+use App\Helpers\PbjHelper;
 use App\Http\Controllers\DokumenController;
 use App\Http\Controllers\NotifController;
 use App\Http\Controllers\PengadaanController;
@@ -101,26 +102,29 @@ Route::middleware(['jwt.verify:'.multiroles([RoleConst::ADMIN,RoleConst::RENDAL,
 
 Route::get("test", function(Request $request){
 
-    // $token = FcmToken::all("token")->pluck('token');
+    $token = FcmToken::all("token")->pluck('token')->last();
     // $recipients = $token->toArray();
+    // return $token;
 
 
-    // fcm()
-    // ->to($recipients) // $recipients must an array
-    // ->priority('normal')
-    // ->timeToLive(0)
-    // ->data([
-    //     'title' => 'Test FCM',
-    //     'body' => 'This is a test of FCM',
-    // ])
-    // ->notification([
-    //     'title' => 'Test FCM',
-    //     'body' => 'This is a test of FCM',
-    // ])
-    // ->send();
-    $notif = Notification::first();
-    
-    return PbjHelper::sendNotification($notif);
+    $cak = fcm()
+    ->to(["cmwHouglROuLxRKmJhfQX2:APA91bFM5ra4Fosk11xZZmRMBkTBgEb4s-Pq0UrLlbNXZGMZViOjIIWnaiWsc3WCR7cn0uj93XlO7WyjHjJWV3F8sIchIcamP3UKqso-_ufqzukjcK68PYW-xutVagRFf5HnC--Rk9Ai"]) // $recipients must an array
+    ->priority('normal')
+    ->timeToLive(0)
+    ->data([
+        'title' => 'Test FCM',
+        'body' => 'This is a test of FCM',
+    ])
+    ->notification([
+        'title' => 'Test FCM',
+        'body' => 'This is a test of FCM',
+    ])
+    ->send();
+    return $cak;
+    // return("jing");
+    // $notif = Notification::all()->last();
+    // dd($notif);
+    // return PbjHelper::sendNotification($notif);
 
 });
 
